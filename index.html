@@ -230,6 +230,43 @@
         </div>
     </div>
 
+    <!-- EKRAN 4.7: KELİME PİZZASI OYUNU -->
+    <div id="game-pizza" class="screen">
+        <div class="pizza-header-area">
+            <div class="pizza-progress-badge" id="pizza-progress">⭐ Dilimler: 0 / 8 Yerleşti</div>
+            <div class="target-pizza-card" id="pizza-target-card" onclick="pronouncePizzaTarget()">
+                <div class="pizza-target-word" id="pizza-target-word">Hedef Kelime</div>
+                <div class="pizza-target-phonetic" id="pizza-target-phonetic">okunuş</div>
+                <div class="pizza-speaker-icon">🔊</div>
+            </div>
+            <p class="pizza-instruction-text" id="pizza-instruction">Doğru dilimi bul ve pizzayı tamamla! 🍕</p>
+        </div>
+
+        <div class="pizza-table-container" id="pizza-table-container">
+            <!-- Üst Dilimler (2 Adet) -->
+            <div class="pizza-cluster cluster-top" id="cluster-top"></div>
+
+            <div class="pizza-middle-row">
+                <!-- Sol Dilimler (2 Adet) -->
+                <div class="pizza-cluster cluster-left" id="cluster-left"></div>
+
+                <!-- Ortadaki Kesik Çizgili Pizza Tepsisi -->
+                <div class="pizza-center-board" id="pizza-center-board">
+                    <svg class="pizza-svg" id="pizza-svg" viewBox="0 0 280 280">
+                        <!-- SVG dilimleri ve kesik çizgiler JS ile oluşturulacak -->
+                    </svg>
+                    <div class="pizza-center-overlay" id="pizza-center-overlay"></div>
+                </div>
+
+                <!-- Sağ Dilimler (2 Adet) -->
+                <div class="pizza-cluster cluster-right" id="cluster-right"></div>
+            </div>
+
+            <!-- Alt Dilimler (2 Adet) -->
+            <div class="pizza-cluster cluster-bottom" id="cluster-bottom"></div>
+        </div>
+    </div>
+
     <!-- EKRAN 5.5: KATEGORİ PANELİ (Oyun/Etkinlik Seçimi) -->
     <div id="stage-dashboard" class="screen">
         <div class="menu-title-container">
@@ -262,6 +299,11 @@
                 onclick="startTrainGame()">
                 <span class="mode-icon">🚂</span>
                 <span class="mode-label">Kelime Treni</span>
+            </button>
+            <button class="game-mode-btn" style="background: linear-gradient(135deg, #FF5722, #D84315);"
+                onclick="startPizzaGame()">
+                <span class="mode-icon">🍕</span>
+                <span class="mode-label">Kelime Pizzası</span>
             </button>
         </div>
 
