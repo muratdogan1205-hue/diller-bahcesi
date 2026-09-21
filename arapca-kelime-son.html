@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🦁 Kelime Avcısı: Gizemli Bahçe 🌴</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Fredoka:wght@400;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Fredoka', 'Segoe UI', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            background: linear-gradient(180deg, #87CEEB 0%, #E0F7FA 100%);
+            /* Gökyüzü teması */
+        }
+
+        /* --- ORTAK EKRAN STİLLERİ --- */
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .arabic-text {
+            font-family: 'Amiri', serif;
+            direction: rtl;
+        }
+
+        h1 {
+            color: #2E7D32;
+            text-shadow: 2px 2px 0px #fff;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 2.5rem;
+        }
+
+        .btn {
+            background: #FF9800;
+            color: white;
+            border: 4px solid #F57C00;
+            border-radius: 20px;
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            margin: 10px;
+            cursor: pointer;
+            font-family: 'Fredoka', sans-serif;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 0 5px 0 #E65100;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #E65100;
+        }
+
+        .btn:hover {
+            background: #FB8C00;
+        }
+
+        .home-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1000;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 2rem;
+            padding: 0;
+            justify-content: center;
+            background: #fff;
+            color: #333;
+            border-color: #ddd;
+            box-shadow: 0 4px 0 #ccc;
+        }
+
+        /* --- ANA MENÜ --- */
+        #main-menu {
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="90" font-size="80">🌿</text></svg>') 0 0/100px 100px repeat-x bottom,
+                linear-gradient(180deg, #b9fbc0 0%, #fbf8cc 100%);
+            background-repeat: repeat-x, no-repeat;
+            background-position: bottom, center;
+        }
+
+        .menu-title-container {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 30px;
+            margin-bottom: 30px;
+            border: 5px solid #81C784;
+            text-align: center;
+        }
+
+        /* --- OYUN 1: KARTLAR --- */
+        #game-memory {
+            background-color: #FFF3E0;
+            background-image: radial-gradient(#FFCC80 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            /* 4 yerine 3 kolon -> Daha geniş kartlar */
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+            /* Genişlik arttırıldı */
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            height: 160px;
+            /* Yükseklik arttırıldı (100px -> 160px) */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            /* Emoji boyutu büyütüldü */
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+            position: relative;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card.matched {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        /* Kart Yüzleri */
+        .card .front,
+        .card .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            overflow: hidden;
+            border: 4px solid white;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Kartın Ön Yüzü (İçerik) */
+        .card .front {
+            background: #fff;
+            transform: rotateY(180deg);
+            color: #333;
+        }
+
+        /* Kartın Arka Yüzü (Desen) */
+        .card .back {
+            background: linear-gradient(135deg, #FF6F00 25%, transparent 25%) -50px 0,
+                linear-gradient(225deg, #FF6F00 25%, transparent 25%) -50px 0,
+                linear-gradient(315deg, #FF6F00 25%, transparent 25%),
+                linear-gradient(45deg, #FF6F00 25%, transparent 25%);
+            background-size: 40px 40px;
+            background-color: #FF8F00;
+            color: white;
+            font-size: 3rem;
+            text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
+        }
+
+
+        /* --- OYUN 2: DİNLE BUL --- */
+        #game-listening {
+            background-color: #E1F5FE;
+        }
+
+        .speech-bubble {
+            background: white;
+            padding: 20px 40px;
+            border-radius: 50px;
+            position: relative;
+            margin-bottom: 50px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            font-size: 2rem;
+        }
+
+        .speech-bubble:after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 20px solid transparent;
+            border-top-color: white;
+        }
+
+        .animals-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .animal-option {
+            font-size: 5rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.2));
+        }
+
+        .animal-option:hover {
+            transform: scale(1.2);
+        }
+
+        /* --- OYUN 3: RENKLER ORMANI --- */
+        #game-colors {
+            background: linear-gradient(180deg, #F0F4C3 0%, #DCEDC8 100%);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .target-color-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            border: 3px solid #333;
+            z-index: 100;
+        }
+
+        .flying-object {
+            position: absolute;
+            font-size: 4rem;
+            cursor: pointer;
+            animation: float linear forwards;
+            bottom: -100px;
+        }
+
+        @keyframes float {
+            to {
+                bottom: 120vh;
+            }
+        }
+
+        /* Animasyonlar */
+        .pop-anim {
+            animation: pop 0.3s ease-out forwards;
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .feedback-text {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            z-index: 2000;
+            display: none;
+        }
+
+        /* --- ÖĞRENME MODU --- */
+        #learn-screen {
+            background: linear-gradient(180deg, #E8EAF6 0%, #C5CAE9 100%);
+            overflow-y: auto;
+            padding-top: 80px;
+            padding-bottom: 40px;
+        }
+
+        .learn-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 700px;
+            padding: 20px;
+        }
+
+        .learn-card {
+            background: white;
+            border-radius: 20px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 3px solid #7986CB;
+        }
+
+        .learn-card:hover {
+            transform: translateY(-5px) scale(1.03);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .learn-card:active {
+            transform: scale(0.97);
+        }
+
+        .learn-card .emoji {
+            font-size: 3rem;
+            margin-bottom: 5px;
+        }
+
+        .learn-card .ar-text {
+            font-family: 'Amiri', serif;
+            font-size: 1.8rem;
+            color: #3949AB;
+            direction: rtl;
+        }
+
+        .learn-card .okunus {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .learn-card .tr-text {
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 3px;
+        }
+
+        .learn-section-title {
+            font-size: 1.5rem;
+            color: #3949AB;
+            margin: 20px 0 10px 0;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* Aşama Seçim Ekranı */
+        #stage-select {
+            background: linear-gradient(180deg, #E8EAF6 0%, #C5CAE9 100%);
+            overflow-y: auto;
+            padding-top: 80px;
+            padding-bottom: 40px;
+        }
+
+        .stage-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        .stage-btn {
+            background: linear-gradient(135deg, #7C4DFF 0%, #536DFE 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 15px 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(124, 77, 255, 0.3);
+        }
+
+        .stage-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(124, 77, 255, 0.4);
+        }
+
+        .stage-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Ses Butonu */
+        .sound-btn {
+            background: #4CAF50;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .sound-btn:hover {
+            background: #66BB6A;
+            transform: scale(1.1);
+        }
+
+        .sound-btn:active {
+            transform: scale(0.9);
+        }
+
+        @media (max-width: 600px) {
+            .stage-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .grid-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .card {
+                height: 80px;
+                font-size: 2rem;
+            }
+
+            .animal-option {
+                font-size: 4rem;
+            }
+
+            .learn-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .learn-card .emoji {
+                font-size: 2.5rem;
+            }
+
+            .learn-card .ar-text {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Geri Tuşu -->
+    <button class="btn home-btn" onclick="goHome()" id="home-btn" style="display: none;">🏠</button>
+
+    <!-- Feedback Hazır -->
+    <div id="feedback" class="feedback-text">Harika! 🌟</div>
+
+    <!-- EKRAN 1: ANA MENÜ -->
+    <div id="main-menu" class="screen active">
+        <div class="menu-title-container">
+            <h1 style="margin:0;">🌴 Kelime Avcısı 🦁</h1>
+            <p style="font-size: 1.2rem; color: #555;">Gizemli Bahçe'ye Hoşgeldin!</p>
+        </div>
+
+        <button class="btn" style="background: #9C27B0; border-color: #7B1FA2;" onclick="startLearningMode()">
+            <span>📖</span> Kelimeleri Öğren
+        </button>
+        <button class="btn" onclick="startMemoryGame()">
+            <span>🃏</span> Eşleştirme Kartları
+        </button>
+        <button class="btn" style="background: #00BCD4; border-color: #0097A7;" onclick="startListeningGame()">
+            <span>👂</span> Dinle ve Bul
+        </button>
+        <button class="btn" style="background: #8BC34A; border-color: #689F38;" onclick="startColorGame()">
+            <span>🎈</span> Renkler Ormanı
+        </button>
+    </div>
+
+    <!-- EKRAN 2: HAFIZA OYUNU -->
+    <div id="game-memory" class="screen">
+        <h1>Eşleştirme Kartları 🃏</h1>
+        <p style="margin-bottom: 20px; font-size: 1.2rem;">Resmi Arapça ismiyle eşleştir!</p>
+        <div class="grid-container" id="memory-grid">
+            <!-- Kartlar JS ile gelecek -->
+        </div>
+    </div>
+
+    <!-- EKRAN 3: DİNLEME OYUNU -->
+    <div id="game-listening" class="screen">
+        <div class="speech-bubble" id="listening-text">
+            Ben kimim?<br>
+            <span class="arabic-text" style="color: #0288D1; font-size: 2.5rem;">???</span>
+        </div>
+        <div class="animals-container" id="listening-options">
+            <!-- Hayvanlar JS ile gelecek -->
+        </div>
+    </div>
+
+    <!-- EKRAN 4: RENKLER OYUNU -->
+    <div id="game-colors" class="screen">
+        <div class="target-color-display" id="color-target-display">
+            Hedef: <span id="target-word" class="arabic-text" style="font-weight:bold; color:red;">أحمر</span> (Ahmar)
+        </div>
+        <!-- Balonlar JS ile uçacak -->
+    </div>
+
+    <!-- EKRAN 5: AŞAMA SEÇİM -->
+    <div id="stage-select" class="screen">
+        <h1 style="margin-top: 0;">📖 Aşama Seç</h1>
+        <p style="color: #555; margin-bottom: 10px;">Her aşamada 20 kelime var!</p>
+        <div class="stage-grid" id="stage-grid">
+            <!-- Aşamalar JS ile gelecek -->
+        </div>
+    </div>
+
+    <!-- EKRAN 6: ÖĞRENME MODU -->
+    <div id="learn-screen" class="screen">
+        <h1 style="margin-top: 0;" id="learn-title">📖 Aşama 1</h1>
+        <p style="color: #555; margin-bottom: 10px;">🔊 butonuna tıkla ve dinle!</p>
+        <div id="learn-content">
+            <!-- İçerik JS ile gelecek -->
+        </div>
+    </div>
+
+    <!-- Harici kelime veritabanı -->
+    <script src="arabic-words-data.js"></script>
+
+    <script>
+        // --- VERİ HAVUZU ---
+        const vocab = [
+            { id: 'apple', tr: 'Elma', ar: 'تفاحة', tr_okunus: 'Tuffah', emoji: '🍎', color: 'red' },
+            { id: 'cat', tr: 'Kedi', ar: 'قطة', tr_okunus: 'Kıtta', emoji: '🐱', color: 'orange' },
+            { id: 'lion', tr: 'Aslan', ar: 'أسد', tr_okunus: 'Esed', emoji: '🦁', color: 'orange' },
+            { id: 'dog', tr: 'Köpek', ar: 'كلب', tr_okunus: 'Kelb', emoji: '🐶', color: 'brown' },
+            { id: 'tree', tr: 'Ağaç', ar: 'شجرة', tr_okunus: 'Şecera', emoji: '🌳', color: 'green' },
+            { id: 'star', tr: 'Yıldız', ar: 'نجمة', tr_okunus: 'Nejme', emoji: '⭐', color: 'yellow' },
+            { id: 'fish', tr: 'Balık', ar: 'سمكة', tr_okunus: 'Semeke', emoji: '🐟', color: 'blue' },
+            { id: 'car', tr: 'Araba', ar: 'سيارة', tr_okunus: 'Seyyara', emoji: '🚗', color: 'red' }
+        ];
+
+        const colorsInfo = [
+            { id: 'red', tr: 'Kırmızı', ar: 'أحمر', okunus: 'Ahmar', code: '#f44336' },
+            { id: 'blue', tr: 'Mavi', ar: 'أزرق', okunus: 'Azrak', code: '#2196F3' },
+            { id: 'green', tr: 'Yeşil', ar: 'أخضر', okunus: 'Ahdar', code: '#4CAF50' },
+            { id: 'yellow', tr: 'Sarı', ar: 'أصفر', okunus: 'Asfar', code: '#FFEB3B' }
+        ];
+
+        // --- SES SENTEZİ (TTS) ---
+        function speakArabic(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ar-SA'; // Arapça
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // --- NAVİGASYON ---
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+
+            const homeBtn = document.getElementById('home-btn');
+            if (id === 'main-menu') {
+                homeBtn.style.display = 'none';
+                stopColorGame();
+            } else {
+                homeBtn.style.display = 'flex';
+            }
+        }
+
+        function goHome() {
+            showScreen('main-menu');
+        }
+
+        function showFeedback(text = "Harika! 🌟") {
+            const fb = document.getElementById('feedback');
+            fb.textContent = text;
+            fb.style.display = 'block';
+            setTimeout(() => { fb.style.display = 'none'; }, 1000);
+        }
+
+        // --- OYUN 1: KART EŞLEŞTİRME ---
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+
+        function startMemoryGame() {
+            showScreen('game-memory');
+            const grid = document.getElementById('memory-grid');
+            grid.innerHTML = '';
+            flippedCards = [];
+            matchedPairs = 0;
+
+            // 6 öğe seç (12 kart)
+            let selected = [...vocab].sort(() => 0.5 - Math.random()).slice(0, 6);
+
+            // Kart çiftleri oluştur: Biri Emoji, Biri Arapça
+            let deck = [];
+            selected.forEach(item => {
+                deck.push({ id: item.id, type: 'emoji', content: item.emoji, data: item });
+                deck.push({ id: item.id, type: 'text', content: `<div class="arabic-text">${item.ar}</div><div style="font-size:0.6em">${item.tr_okunus}</div>`, data: item });
+            });
+
+            // Karıştır
+            deck.sort(() => 0.5 - Math.random());
+
+            deck.forEach(cardData => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="front">${cardData.content}</div>
+                    <div class="back">?</div>
+                `;
+                card.onclick = () => flipCard(card, cardData);
+                grid.appendChild(card);
+            });
+        }
+
+        function flipCard(cardElement, cardData) {
+            if (cardElement.classList.contains('flipped') || flippedCards.length >= 2) return;
+
+            // Sesi çal (Arapça metin ise veya emoji ise)
+            if (cardData.type === 'text') speakArabic(cardData.data.ar);
+
+            cardElement.classList.add('flipped');
+            flippedCards.push({ el: cardElement, data: cardData });
+
+            if (flippedCards.length === 2) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const [c1, c2] = flippedCards;
+
+            if (c1.data.id === c2.data.id) {
+                // Eşleşme!
+                setTimeout(() => {
+                    c1.el.classList.add('matched');
+                    c2.el.classList.add('matched');
+                    showFeedback("Doğru! 🎉");
+                    if (c1.data.type === 'text') speakArabic(c1.data.data.ar);
+                    else speakArabic(c2.data.data.ar);
+                }, 500);
+                matchedPairs++;
+                if (matchedPairs === 6) {
+                    setTimeout(() => showFeedback("Oyun Bitti! 🏆"), 1500);
+                }
+            } else {
+                // Yanlış
+                setTimeout(() => {
+                    c1.el.classList.remove('flipped');
+                    c2.el.classList.remove('flipped');
+                }, 1000);
+            }
+            flippedCards = [];
+        }
+
+        // --- OYUN 2: DİNLE VE BUL ---
+        let currentQuestionItem = null;
+
+        function startListeningGame() {
+            showScreen('game-listening');
+            nextListeningQuestion();
+        }
+
+        function nextListeningQuestion() {
+            // Rastgele 3 hayvan/nesne seç
+            let options = [...vocab].sort(() => 0.5 - Math.random()).slice(0, 3);
+            currentQuestionItem = options[Math.floor(Math.random() * options.length)];
+
+            // Konuşma balonu
+            const bubble = document.getElementById('listening-text');
+            bubble.innerHTML = `<div>Ben kimim?</div><div class="arabic-text" style="color: #0288D1; font-size: 3rem; margin-top:10px;">${currentQuestionItem.ar}</div><div style="font-size:1rem; color:#666;">(${currentQuestionItem.tr_okunus})</div>`;
+
+            // Sesi çal
+            setTimeout(() => speakArabic(currentQuestionItem.ar), 500);
+
+            // Seçenekler
+            const container = document.getElementById('listening-options');
+            container.innerHTML = '';
+
+            options.forEach(opt => {
+                const el = document.createElement('div');
+                el.className = 'animal-option';
+                el.textContent = opt.emoji;
+                el.onclick = () => {
+                    if (opt.id === currentQuestionItem.id) {
+                        showFeedback("Aferin! 👏");
+                        speakArabic("Mümtaz!"); // Harika
+                        setTimeout(nextListeningQuestion, 1500);
+                    } else {
+                        el.style.transform = "translateX(10px)";
+                        setTimeout(() => el.style.transform = "none", 200);
+                        speakArabic("La, havale marra uhra"); // Hayır (basitçe La diyebiliriz)
+                    }
+                };
+                container.appendChild(el);
+            });
+        }
+
+        // --- OYUN 3: RENKLER ORMANI ---
+        let colorGameInterval = null;
+        let targetColorObj = null;
+
+        function startColorGame() {
+            showScreen('game-colors');
+            const container = document.getElementById('game-colors');
+            // Remove old balloons if any (except UI elements)
+            document.querySelectorAll('.flying-object').forEach(e => e.remove());
+
+            setNewColorTarget();
+
+            colorGameInterval = setInterval(() => {
+                spawnBalloon();
+            }, 1200); // Balon sıklığı
+        }
+
+        function stopColorGame() {
+            if (colorGameInterval) clearInterval(colorGameInterval);
+            document.querySelectorAll('.flying-object').forEach(e => e.remove());
+        }
+
+        function setNewColorTarget() {
+            targetColorObj = colorsInfo[Math.floor(Math.random() * colorsInfo.length)];
+            const display = document.getElementById('target-word');
+            display.textContent = targetColorObj.ar;
+            display.style.color = targetColorObj.code;
+            document.getElementById('color-target-display').innerHTML = `Hedef: <span class="arabic-text" style="font-weight:bold; color:${targetColorObj.code}; font-size:1.5rem;">${targetColorObj.ar}</span> (${targetColorObj.okunus})`;
+
+            speakArabic(targetColorObj.ar);
+        }
+
+        function spawnBalloon() {
+            if (!document.getElementById('game-colors').classList.contains('active')) return;
+
+            const container = document.getElementById('game-colors');
+            const el = document.createElement('div');
+            el.className = 'flying-object';
+
+            // Rastgele bir renk ve o rengin balonu olsun
+            // Basitlik için sadece emoji 🎈 kullanabiliriz ama renkli yapmak için SVG veya css filter kullanmak lazım.
+            // Veya direkt o renge uygun emoji bulalım (🔴 🔵 🟢 🟡)
+
+            const randColor = colorsInfo[Math.floor(Math.random() * colorsInfo.length)];
+            let emoji = '🎈';
+            if (randColor.id === 'red') emoji = '🔴';
+            if (randColor.id === 'blue') emoji = '🔵';
+            if (randColor.id === 'green') emoji = '🟢';
+            if (randColor.id === 'yellow') emoji = '🟡';
+
+            el.textContent = emoji;
+            el.style.left = Math.random() * 80 + 10 + '%';
+            el.style.fontSize = (Math.random() * 2 + 3) + 'rem';
+
+            // Hız
+            let speed = Math.random() * 4 + 4; // 4-8s
+            el.style.animationDuration = speed + 's';
+
+            el.onclick = () => {
+                if (randColor.id === targetColorObj.id) {
+                    // Doğru!
+                    el.classList.add('pop-anim');
+                    showFeedback("Yakaladın! ✨");
+                    speakArabic(randColor.ar); // Tekrar et
+                    setTimeout(() => el.remove(), 300);
+                    // Yeni hedef
+                    setTimeout(() => setNewColorTarget(), 1000);
+                } else {
+                    // Yanlış
+                    el.style.opacity = 0.5;
+                }
+            };
+
+            container.appendChild(el);
+
+            // Temizlik
+            setTimeout(() => {
+                if (el.parentNode) el.remove();
+            }, speed * 1000);
+        }
+
+        // --- ÖĞRENME MODU (50 AŞAMA) ---
+        // arabicWords harici dosyadan yüklenecek ya da inline tanımlanacak
+        // Şimdilik harici dosya kullanıyoruz: arabic-words-data.js
+
+        const TOTAL_STAGES = 20; // Şu an 20 aşama mevcut, 50'ye tamamlanacak
+
+        function startLearningMode() {
+            showScreen('stage-select');
+            const grid = document.getElementById('stage-grid');
+            grid.innerHTML = '';
+
+            for (let i = 1; i <= TOTAL_STAGES; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'stage-btn';
+                btn.textContent = i;
+                btn.onclick = () => startStage(i);
+                grid.appendChild(btn);
+            }
+        }
+
+        function startStage(stageNum) {
+            showScreen('learn-screen');
+            document.getElementById('learn-title').textContent = `📖 Aşama ${stageNum}`;
+
+            const container = document.getElementById('learn-content');
+            container.innerHTML = '';
+
+            // arabicWords dizisinden bu aşamaya ait kelimeleri filtrele
+            const stageWords = arabicWords.filter(w => w.s === stageNum);
+
+            const grid = document.createElement('div');
+            grid.className = 'learn-grid';
+
+            stageWords.forEach(item => {
+                const card = createLearnCard(item.e, item.ar, item.ok, item.tr);
+                grid.appendChild(card);
+            });
+
+            container.appendChild(grid);
+        }
+
+        function createLearnCard(emoji, arText, okunus, trText) {
+            const card = document.createElement('div');
+            card.className = 'learn-card';
+            card.innerHTML = `
+                <div class="emoji">${emoji}</div>
+                <div class="ar-text">${arText}</div>
+                <div class="okunus">${okunus}</div>
+                <div class="tr-text">${trText}</div>
+                <button class="sound-btn" onclick="event.stopPropagation(); speakArabic('${arText}')">🔊</button>
+            `;
+            return card;
+        }
+
+    </script>
+</body>
+
+</html>

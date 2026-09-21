@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🌺ELİF İNCİ'NİN DİLLER BAHÇESİ 🌺</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+</head>
+
+<body>
+
+    <!-- Geri Tuşu -->
+    <button class="btn home-btn" onclick="goHome()" id="home-btn" style="display: none;">🏠</button>
+
+    <!-- Yıldız Sayacı -->
+    <div id="star-counter" class="star-counter" style="display: none;">
+        <span class="star-icon">⭐</span>
+        <span id="star-count">0</span>
+    </div>
+
+    <!-- Konfeti Container -->
+    <div id="confetti-container" class="confetti-container"></div>
+
+    <!-- Feedback Hazır -->
+    <div id="feedback" class="feedback-text">Harika! 🌟</div>
+
+    <!-- EKRAN 0: DİL SEÇİMİ (BAŞLANGIÇ EKRANI) - BALONLU BAHÇE -->
+    <div id="language-screen" class="screen active">
+        <div class="garden-scene">
+            <!-- Arka Plan Elementleri -->
+            <div class="sun"></div>
+            <div class="cloud c1"></div>
+            <div class="cloud c2"></div>
+
+            <!-- Başlık -->
+            <div class="garden-title">
+                <h1>🌺 ELİF İNCİ'NİN DİLLER BAHÇESİ 🌺</h1>
+                <p class="garden-subtitle">Öğrenmek istediğin dili seç ve başla! 🎈</p>
+            </div>
+
+            <!-- Uçan Balonlar -->
+            <div class="balloons-container">
+
+                <!-- Arapça -->
+                <div class="balloon-wrapper float-1" data-lang="arabic" onclick="selectLanguage('arabic', event)">
+                    <div class="balloon-body" style="background: radial-gradient(circle at 30% 30%, #66BB6A, #2E7D32);">
+                        <div class="balloon-content">
+                            <span class="balloon-flag">🇸🇦</span>
+                            <span class="balloon-label">Arapça</span>
+                            <span class="balloon-play-btn">Başla ▶</span>
+                        </div>
+                    </div>
+                    <div class="balloon-string"></div>
+                </div>
+
+                <!-- İngilizce -->
+                <div class="balloon-wrapper float-2" data-lang="english" onclick="selectLanguage('english', event)">
+                    <div class="balloon-body" style="background: radial-gradient(circle at 30% 30%, #42A5F5, #1565C0);">
+                        <div class="balloon-content">
+                            <span class="balloon-flag">🇬🇧</span>
+                            <span class="balloon-label">İngilizce</span>
+                            <span class="balloon-play-btn">Başla ▶</span>
+                        </div>
+                    </div>
+                    <div class="balloon-string"></div>
+                </div>
+
+            </div>
+
+
+            <!-- Çimen -->
+            <div class="grass-layer"></div>
+        </div>
+    </div>
+
+    <!-- EKRAN 1: ANA MENÜ - YENİ EĞLENCELİ BAHÇE -->
+    <div id="main-menu" class="screen">
+        <div class="garden-menu-scene">
+            <!-- Arka Plan Süsleri -->
+            <div class="bg-pattern-circle bp1"></div>
+            <div class="bg-pattern-circle bp2"></div>
+
+            <div class="menu-title-fun">
+                <h1 id="main-title">🌺 ELİF İNCİ'NİN DİLLER BAHÇESİ 🌺</h1>
+                <p style="font-size: 1.1rem; color: #795548; margin-top: 5px; font-weight:bold;" id="main-subtitle">
+                    Öğrenmeye Hazır mısın?</p>
+            </div>
+
+            <!-- Eğlenceli Kategori Grid'i -->
+            <div class="category-fun-grid">
+
+                <!-- Hayvanlar -->
+                <div class="category-card-fun style-animals" onclick="selectCategory('animals')">
+                    <div class="fun-icon"><img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f981.svg" style="width:60px; height:60px;" alt="Hayvanlar"></div>
+                    <span class="label">Hayvanlar</span>
+                </div>
+
+                <!-- Renkler -->
+                <div class="category-card-fun style-colors" onclick="selectCategory('colors')">
+                    <div class="fun-icon"><img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f308.svg" style="width:60px; height:60px;" alt="Renkler"></div>
+                    <span class="label">Renkler</span>
+                </div>
+
+                <!-- Meyveler -->
+                <div class="category-card-fun style-fruits" onclick="selectCategory('fruits')">
+                    <div class="fun-icon"><img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f34e.svg" style="width:60px; height:60px;" alt="Meyveler"></div>
+                    <span class="label">Meyveler</span>
+                </div>
+
+                <!-- Aile -->
+                <div class="category-card-fun style-family" onclick="selectCategory('family')">
+                    <div class="fun-icon"><img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f46a.svg" style="width:60px; height:60px;" alt="Aile"></div>
+                    <span class="label">Aile</span>
+                </div>
+
+                <!-- Sayılar -->
+                <div class="category-card-fun style-numbers" onclick="selectCategory('numbers')">
+                    <div class="fun-icon"><img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f522.svg" style="width:60px; height:60px;" alt="Sayılar"></div>
+                    <span class="label">Sayılar</span>
+                </div>
+
+                <!-- Şekiller -->
+                <div class="category-card-fun style-shapes" onclick="selectCategory('shapes')">
+                    <div class="fun-icon"><img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f53a.svg" style="width:60px; height:60px;" alt="Şekiller"></div>
+                    <span class="label">Şekiller</span>
+                </div>
+
+                <!-- Mutfak -->
+                <div class="category-card-fun style-kitchen" onclick="selectCategory('kitchen')">
+                    <div class="fun-icon"><img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f963.svg" style="width:60px; height:60px;" alt="Mutfak"></div>
+                    <span class="label">Mutfak</span>
+                </div>
+
+                <!-- Temel Cümleler -->
+                <div class="category-card-fun style-phrases" onclick="selectCategory('phrases')">
+                    <div class="fun-icon"><img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f4ac.svg" style="width:60px; height:60px;" alt="Cümleler"></div>
+                    <span class="label">Cümleler</span>
+                </div>
+
+            </div>
+
+            <button class="bottom-nav-btn" onclick="showScreen('language-screen')">Dil Değiştir</button>
+        </div>
+    </div>
+
+    <!-- EKRAN 2: HAFIZA OYUNU -->
+    <div id="game-memory" class="screen">
+        <h1>Eşleştirme Kartları 🃏</h1>
+        <p style="margin-bottom: 20px; font-size: 1.2rem;" id="memory-subtitle">Resmi ismiyle eşleştir!</p>
+        <div class="grid-container" id="memory-grid">
+            <!-- Kartlar JS ile gelecek -->
+        </div>
+    </div>
+
+    <!-- EKRAN 3: DİNLEME OYUNU -->
+    <div id="game-listening" class="screen">
+        <div class="speech-bubble" id="listening-text">
+            Ben kimim?<br>
+            <span class="arabic-text" style="color: #0288D1; font-size: 2.5rem;">???</span>
+        </div>
+        <div class="animals-container" id="listening-options">
+            <!-- Hayvanlar JS ile gelecek -->
+        </div>
+    </div>
+
+    <!-- EKRAN 4: KELİME AVCISI OYUNU -->
+    <div id="game-colors" class="screen">
+        <div class="balloon-timer" id="balloon-timer" style="display: none;">Süre: 0</div>
+        <div class="target-color-display" id="color-target-display">
+            Hedef yükleniyor...
+        </div>
+        <!-- Balonlar JS ile uçacak -->
+    </div>
+
+    <!-- EKRAN 4.5: KELİME TRENİ OYUNU -->
+    <div id="game-train" class="screen">
+        <div class="train-sky-area">
+            <div class="train-progress-badge" id="train-progress">⭐ Vagonlar: 0 / 10 Doldu</div>
+            <div class="target-balloon-wrapper" id="train-balloon-target" onclick="pronounceTrainTarget()">
+                <div class="target-balloon-body">
+                    <div class="balloon-word" id="train-target-word">Hedef Kelime</div>
+                    <div class="balloon-phonetic" id="train-target-phonetic">okunuş</div>
+                    <div class="balloon-speaker-icon">🔊</div>
+                </div>
+                <div class="target-balloon-rope"></div>
+                <div class="target-balloon-basket">🧺</div>
+            </div>
+            <p class="train-instruction-text" id="train-instruction">Balondaki kelimeyi uygun vagona koy!</p>
+        </div>
+
+        <div class="train-track-container" id="train-track-container">
+            <div class="train-convoy" id="train-convoy">
+                <!-- Gülen Lokomotif -->
+                <div class="train-locomotive" id="train-locomotive">
+                    <div class="locomotive-smoke-container">
+                        <div class="puff p1">💨</div>
+                        <div class="puff p2">💨</div>
+                    </div>
+                    <div class="locomotive-chimney"></div>
+                    <div class="locomotive-body">
+                        <div class="locomotive-cab">
+                            <div class="cab-window"></div>
+                        </div>
+                        <div class="locomotive-face">
+                            <div class="train-eye left-eye"><div class="pupil"></div></div>
+                            <div class="train-eye right-eye"><div class="pupil"></div></div>
+                            <div class="train-cheeks left-cheek"></div>
+                            <div class="train-cheeks right-cheek"></div>
+                            <div class="train-smile"></div>
+                        </div>
+                    </div>
+                    <div class="locomotive-wheels">
+                        <div class="wheel big-wheel"></div>
+                        <div class="wheel small-wheel"></div>
+                        <div class="wheel small-wheel"></div>
+                    </div>
+                    <div class="locomotive-pilot"></div>
+                </div>
+
+                <!-- 10 Vagon JS ile gelecek -->
+                <div class="train-wagons-list" id="train-wagons-list">
+                </div>
+            </div>
+            <!-- Tren Rayları -->
+            <div class="train-tracks">
+                <div class="rail-bar rail-top"></div>
+                <div class="rail-bar rail-bottom"></div>
+                <div class="sleepers-row"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EKRAN 5.5: KATEGORİ PANELİ (Oyun/Etkinlik Seçimi) -->
+    <div id="stage-dashboard" class="screen">
+        <div class="menu-title-container">
+            <h1 style="margin:0;" id="dashboard-title">🦁 Hayvanlar</h1>
+            <p style="font-size: 1.2rem; color: #555;">Ne yapmak istersin?</p>
+        </div>
+
+        <div class="game-mode-grid">
+            <button class="game-mode-btn" style="background: linear-gradient(135deg, #9C27B0, #7B1FA2);"
+                onclick="startLearningMode()">
+                <span class="mode-icon">📖</span>
+                <span class="mode-label">Kelimeleri Öğren</span>
+            </button>
+            <button class="game-mode-btn" style="background: linear-gradient(135deg, #FF9800, #F57C00);"
+                onclick="startMemoryGame()">
+                <span class="mode-icon">🃏</span>
+                <span class="mode-label">Eşleştirme</span>
+            </button>
+            <button class="game-mode-btn" style="background: linear-gradient(135deg, #00BCD4, #0097A7);"
+                onclick="startListeningGame()">
+                <span class="mode-icon">👂</span>
+                <span class="mode-label">Dinle ve Bul</span>
+            </button>
+            <button class="game-mode-btn" style="background: linear-gradient(135deg, #8BC34A, #689F38);"
+                onclick="startBalloonGame()">
+                <span class="mode-icon">⚡</span>
+                <span class="mode-label">Kelime Avcısı</span>
+            </button>
+            <button class="game-mode-btn" style="background: linear-gradient(135deg, #E91E63, #C2185B);"
+                onclick="startTrainGame()">
+                <span class="mode-icon">🚂</span>
+                <span class="mode-label">Kelime Treni</span>
+            </button>
+        </div>
+
+        <div class="dashboard-buttons">
+            <button class="btn"
+                style="background: #E91E63; border-color: #C2185B; font-size: 1.2rem; padding: 15px 30px;"
+                onclick="goToMainMenu()">🏠 Ana Menü</button>
+        </div>
+    </div>
+
+    <!-- EKRAN 6: ÖĞRENME MODU -->
+    <div id="learn-screen" class="screen">
+        <h1 style="margin-top: 0;" id="learn-title">📖 Aşama 1</h1>
+        <p style="color: #555; margin-bottom: 10px;">🔊 butonuna tıkla ve dinle!</p>
+        <div id="learn-content">
+            <!-- İçerik JS ile gelecek -->
+        </div>
+    </div>
+
+    <!-- EKRAN 7: OYUN BİTTİ -->
+    <div id="game-complete" class="screen">
+        <div class="complete-container">
+            <div class="trophy-icon">🏆</div>
+            <h1 class="complete-title">Tebrikler! 🎉</h1>
+            <p class="complete-subtitle">Oyunu başarıyla bitirdin!</p>
+
+            <div class="stars-earned">
+                <span class="big-star">⭐</span>
+                <span class="big-star">⭐</span>
+                <span class="big-star">⭐</span>
+            </div>
+
+            <div class="complete-message" id="complete-message">
+                Harika iş çıkardın!
+            </div>
+
+            <div class="complete-buttons">
+                <button class="complete-btn play-again" onclick="playAgain()">
+                    🔄 Tekrar Oyna
+                </button>
+                <button class="complete-btn go-home" onclick="goToMainMenu()">
+                    🏠 Ana Menü
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dil Verileri ve Uygulama Mantığı (Yerel dosyalar ilk önce güvenle yüklenir) -->
+    <script src="arabic-words-data.js"></script>
+    <script src="english-words-data.js"></script>
+    <script src="app.js"></script>
+    <!-- Harici Twemoji Kütüphanesi (Ağ gecikmesinden bağımsız defer ile yüklenir) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/twemoji.min.js" crossorigin="anonymous" defer></script>
+</body>
+
+</html>
