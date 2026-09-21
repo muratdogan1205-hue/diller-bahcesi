@@ -38,9 +38,11 @@ let balloonTime = 0;
 let trainWagonItems = [];
 let currentTrainTarget = null;
 let trainLoadedCount = 0;
-let trainTotalWagons = 10;
+let trainTotalWagons = 5;
 let isTrainProcessing = false;
 let isTrainDeparting = false;
+let trainLapTimeouts = [];
+let perimeterRafId = null;
 
 // --- DİL YAPILANDIRMASI ---
 const LANGUAGE_CONFIG = {
@@ -1191,9 +1193,35 @@ function playTrainWhistleSound() {
 function stopTrainGame() {
     isTrainProcessing = false;
     isTrainDeparting = false;
+    trainLapTimeouts.forEach(t => clearTimeout(t));
+    trainLapTimeouts = [];
+
+    if (perimeterRafId) {
+        cancelAnimationFrame(perimeterRafId);
+        perimeterRafId = null;
+    }
+
+    const trainScreen = document.getElementById('game-train');
+    if (trainScreen) trainScreen.classList.remove('train-perimeter-lap');
+
+    const loco = document.getElementById('train-locomotive');
+    if (loco) {
+        loco.style.position = '';
+        loco.style.left = '';
+        loco.style.top = '';
+        loco.style.transform = '';
+    }
+
+    document.querySelectorAll('.train-wagon').forEach(w => {
+        w.style.position = '';
+        w.style.left = '';
+        w.style.top = '';
+        w.style.transform = '';
+    });
+
     const convoy = document.getElementById('train-convoy');
     if (convoy) {
-        convoy.classList.remove('departing');
+        convoy.classList.remove('departing', 'lap-1', 'lap-reset', 'lap-2');
         convoy.style.transform = '';
     }
 }
@@ -1209,9 +1237,9 @@ function startTrainGame() {
     isTrainProcessing = false;
     isTrainDeparting = false;
 
-    // Kategori kelimelerinden 10 tanesini seç
+    // Kategori kelimelerinden 5 tanesini seç
     let pool = [...currentStageWords];
-    trainWagonItems = pool.sort(() => 0.5 - Math.random()).slice(0, 10);
+    trainWagonItems = pool.sort(() => 0.5 - Math.random()).slice(0, 5);
     trainTotalWagons = trainWagonItems.length;
 
     // Vagonları oluştur
@@ -1392,19 +1420,168 @@ function handleWagonClick(index, item, wagonEl) {
 
 function animateTrainDeparture() {
     isTrainDeparting = true;
+    trainLapTimeouts.forEach(t => clearTimeout(t));
+    trainLapTimeouts = [];
+
+    if (perimeterRafId) {
+        cancelAnimationFrame(perimeterRafId);
+        perimeterRafId = null;
+    }
+
+    const loco = document.getElementById('train-locomotive');
+    const wagons = Array.from(document.querySelectorAll('.train-wagon'));
+    const trainScreen = document.getElementById('game-train');
+
+    if (!loco || wagons.length === 0 || !trainScreen) {
+        showGameComplete();
+        return;
+    }
+
     playCelebrationSound();
     playTrainWhistleSound();
     showConfetti();
-    showFeedback("Bütün vagonlar doldu! Tren kalkıyor! 🚂💨");
+    showFeedback("Bütün vagonlar doldu! Tren ekranı turluyor! 🚂💨");
 
-    const convoy = document.getElementById('train-convoy');
-    if (convoy) {
-        convoy.classList.add('departing');
+    // Ekran ve geometri hesaplamaları
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    const isMobile = Math.min(W, H) < 600;
+
+    // Kenar boşlukları ve köşe dönüş yarıçapı
+    const margin = isMobile ? 32 : 60;
+    const R = isMobile ? 28 : 50;
+    const carSpacing = isMobile ? 48 : 95;
+
+    // Segment uzunlukları (Saat yönünün tersine: Alt -> Sağ -> Üst -> Sol -> Alt)
+    const L1 = Math.max(10, (W - margin - R) - W / 2);
+    const L_arc = 0.5 * Math.PI * R;
+    const L2 = Math.max(10, H - 2 * margin - 2 * R);
+    const L3 = Math.max(10, W - 2 * margin - 2 * R);
+    const L4 = L2;
+    const L5 = Math.max(10, W / 2 - (margin + R));
+
+    const p1 = L1;
+    const p2 = p1 + L_arc;
+    const p3 = p2 + L2;
+    const p4 = p3 + L_arc;
+    const p5 = p4 + L3;
+    const p6 = p5 + L_arc;
+    const p7 = p6 + L4;
+    const p8 = p7 + L_arc;
+    const totalPathLength = p8 + L5;
+
+    // Arabalar listesi: [locomotive, wagon0, wagon1, wagon2, wagon3, wagon4]
+    const cars = [loco, ...wagons];
+
+    // Perimeter modunu aktif et (öğeler ekranda serbestçe dönebilsin)
+    trainScreen.classList.add('train-perimeter-lap');
+
+    function getPerimeterPoint(dist) {
+        if (dist < 0) {
+            return { x: W / 2 + dist, y: H - margin, angle: 0 };
+        }
+        if (dist >= totalPathLength) {
+            return { x: W / 2 + (dist - totalPathLength), y: H - margin, angle: 0 };
+        }
+        if (dist < p1) {
+            return { x: W / 2 + dist, y: H - margin, angle: 0 };
+        }
+        if (dist < p2) {
+            const d = dist - p1;
+            const theta = (Math.PI / 2) - (d / R);
+            const cx = W - margin - R;
+            const cy = H - margin - R;
+            const angle = - (d / R) * (180 / Math.PI);
+            return { x: cx + R * Math.cos(theta), y: cy + R * Math.sin(theta), angle };
+        }
+        if (dist < p3) {
+            const d = dist - p2;
+            return { x: W - margin, y: (H - margin - R) - d, angle: -90 };
+        }
+        if (dist < p4) {
+            const d = dist - p3;
+            const theta = - (d / R);
+            const cx = W - margin - R;
+            const cy = margin + R;
+            const angle = -90 - (d / R) * (180 / Math.PI);
+            return { x: cx + R * Math.cos(theta), y: cy + R * Math.sin(theta), angle };
+        }
+        if (dist < p5) {
+            const d = dist - p4;
+            return { x: (W - margin - R) - d, y: margin, angle: -180 };
+        }
+        if (dist < p6) {
+            const d = dist - p5;
+            const theta = - (Math.PI / 2) - (d / R);
+            const cx = margin + R;
+            const cy = margin + R;
+            const angle = -180 - (d / R) * (180 / Math.PI);
+            return { x: cx + R * Math.cos(theta), y: cy + R * Math.sin(theta), angle };
+        }
+        if (dist < p7) {
+            const d = dist - p6;
+            return { x: margin, y: (margin + R) + d, angle: -270 };
+        }
+        if (dist < p8) {
+            const d = dist - p7;
+            const theta = - Math.PI - (d / R);
+            const cx = margin + R;
+            const cy = H - margin - R;
+            const angle = -270 - (d / R) * (180 / Math.PI);
+            return { x: cx + R * Math.cos(theta), y: cy + R * Math.sin(theta), angle };
+        }
+        const d = dist - p8;
+        return { x: (margin + R) + d, y: H - margin, angle: 0 };
     }
 
-    setTimeout(() => {
-        showGameComplete();
-    }, 2800);
+    const duration = 5200; // 5.2 saniyede akıcı tam kenar turu
+    const totalDistToCover = totalPathLength + carSpacing * cars.length;
+    let startTime = null;
+    let whistlePlayedTop = false;
+
+    function animateStep(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(1, elapsed / duration);
+
+        // Akıcı hızlanma ve yavaşlama
+        const ease = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+        const headDist = ease * totalDistToCover;
+
+        // Üst kenara ulaştığında düdük çal ve konfeti patlat
+        if (!whistlePlayedTop && headDist >= p4) {
+            whistlePlayedTop = true;
+            playTrainWhistleSound();
+            showConfetti();
+            showFeedback("Çuf çuf! Harika bir tur! 🌟🚂");
+        }
+
+        cars.forEach((car, index) => {
+            const carDist = headDist - index * carSpacing;
+            const pt = getPerimeterPoint(carDist);
+            car.style.left = `${pt.x}px`;
+            car.style.top = `${pt.y}px`;
+            car.style.transform = `translate(-50%, -50%) rotate(${pt.angle}deg)`;
+        });
+
+        if (progress < 1) {
+            perimeterRafId = requestAnimationFrame(animateStep);
+        } else {
+            // Tur başarıyla bitti!
+            perimeterRafId = null;
+            playCelebrationSound();
+            playTrainWhistleSound();
+            showConfetti();
+            showFeedback("Tur tamamlandı! Harikasın! 🏆🎉");
+
+            trainLapTimeouts.push(setTimeout(() => {
+                stopTrainGame();
+                showGameComplete();
+            }, 600));
+        }
+    }
+
+    perimeterRafId = requestAnimationFrame(animateStep);
 }
 
 // --- BAŞLANGIÇ OLAY DİNLEYİCİLERİ (DOĞRUDAN TIKLAMA GARANTİSİ) ---

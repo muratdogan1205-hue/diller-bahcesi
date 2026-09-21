@@ -2322,34 +2322,48 @@ img.emoji {
     width: 100%;
     position: relative;
     padding-bottom: 25px;
-    overflow-x: auto;
+    display: flex;
+    justify-content: center;
+    overflow-x: hidden;
     overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: #BDBDBD transparent;
-}
-
-.train-track-container::-webkit-scrollbar {
-    height: 8px;
-}
-
-.train-track-container::-webkit-scrollbar-thumb {
-    background: #B0BEC5;
-    border-radius: 4px;
 }
 
 .train-convoy {
-    display: inline-flex;
+    display: flex;
     align-items: flex-end;
-    padding: 0 40px;
+    justify-content: center;
+    padding: 0 10px;
     position: relative;
     z-index: 5;
     transition: transform 2.5s cubic-bezier(0.25, 1, 0.5, 1);
+    max-width: 100%;
 }
 
-.train-convoy.departing {
-    transform: translateX(130vw) !important;
-    transition: transform 2.6s cubic-bezier(0.4, 0, 0.2, 1);
+/* ==========================================================================
+   TREN TÜM EKRAN ETRAFINDA ZAFER TURU (PERIMETER TOUR)
+   ========================================================================== */
+.train-perimeter-lap #train-locomotive,
+.train-perimeter-lap .train-wagon {
+    position: fixed !important;
+    z-index: 9999 !important;
+    margin: 0 !important;
+    pointer-events: none !important;
+    transition: none !important;
+    will-change: transform, left, top;
+}
+
+.train-perimeter-lap .locomotive-smoke-container .puff {
+    animation-duration: 0.5s !important;
+}
+
+.train-perimeter-lap .wheel,
+.train-perimeter-lap .wagon-wheel {
+    animation: spinWheel 0.25s linear infinite !important;
+}
+
+@keyframes spinWheel {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 /* ==========================================================================
@@ -2776,48 +2790,529 @@ img.emoji {
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* Mobil Uyumluluk */
-@media (max-width: 650px) {
+/* ==========================================================================
+   TREN OYUNU DUYARLILIK (DESKTOP, TABLET & MOBİL UYUMLULUK)
+   ========================================================================== */
+
+/* Tablet Boyutu (501px - 850px) */
+@media (max-width: 850px) and (min-width: 501px) {
     .target-balloon-body {
-        padding: 12px 22px;
-        min-width: 140px;
+        padding: 10px 20px;
+        min-width: 150px;
     }
 
     .balloon-word {
-        font-size: 1.7rem;
+        font-size: 1.8rem;
     }
 
     .balloon-word.arabic-text {
-        font-size: 2rem;
-    }
-
-    .wagon-box {
-        width: 95px;
-        height: 95px;
-    }
-
-    .wagon-cargo-slot {
-        width: 55px;
-        height: 55px;
+        font-size: 2.1rem;
     }
 
     .train-locomotive {
-        width: 130px;
-        height: 125px;
+        width: 85px;
+        height: 85px;
+        margin-right: 4px;
     }
 
     .locomotive-body {
-        width: 120px;
-        height: 85px;
+        width: 80px;
+        height: 58px;
     }
 
     .locomotive-cab {
-        width: 46px;
-        height: 80px;
+        width: 32px;
+        height: 56px;
+        border-radius: 8px 0 0 3px;
+        border-width: 2px;
+    }
+
+    .cab-window {
+        width: 18px;
+        height: 18px;
+        margin: 6px auto 0 auto;
+        border-width: 2px;
+        border-radius: 5px;
     }
 
     .locomotive-face {
-        width: 74px;
-        height: 65px;
+        width: 48px;
+        height: 44px;
+        margin-top: 12px;
+        border-radius: 0 22px 14px 0;
+        border-width: 2px;
+    }
+
+    .train-eye {
+        width: 8px;
+        height: 11px;
+        top: 8px;
+        border-width: 1.5px;
+    }
+
+    .train-eye.left-eye { left: 14px; }
+    .train-eye.right-eye { left: 28px; }
+
+    .train-eye .pupil {
+        width: 4px;
+        height: 4px;
+    }
+
+    .train-cheeks {
+        width: 7px;
+        height: 4px;
+        top: 22px;
+    }
+
+    .left-cheek { left: 10px; }
+    .right-cheek { left: 32px; }
+
+    .train-smile {
+        width: 15px;
+        height: 8px;
+        top: 22px;
+        left: 17px;
+        border-bottom-width: 3px;
+    }
+
+    .locomotive-wheels {
+        width: 80px;
+        height: 20px;
+        margin-top: -7px;
+    }
+
+    .big-wheel {
+        width: 24px;
+        height: 24px;
+        border-width: 3px;
+    }
+
+    .small-wheel {
+        width: 18px;
+        height: 18px;
+        border-width: 2px;
+    }
+
+    .locomotive-chimney {
+        width: 14px;
+        height: 20px;
+        top: 3px;
+        left: 26px;
+        border-top-width: 3px;
+    }
+
+    .locomotive-smoke-container {
+        top: -18px;
+        left: 24px;
+        gap: 4px;
+    }
+
+    .locomotive-smoke-container .puff {
+        font-size: 1rem;
+    }
+
+    .train-wagon {
+        margin-left: 5px;
+    }
+
+    .wagon-box {
+        width: 68px;
+        height: 70px;
+        border-radius: 12px 12px 5px 5px;
+        border-width: 3px;
+        padding: 4px 2px 5px 2px;
+    }
+
+    .wagon-number-badge {
+        width: 15px;
+        height: 15px;
+        font-size: 0.62rem;
+        top: 3px;
+        left: 3px;
+    }
+
+    .wagon-cargo-slot {
+        width: 38px;
+        height: 38px;
+        margin-top: 2px;
+    }
+
+    .wagon-cargo-slot img {
+        width: 30px !important;
+        height: 30px !important;
+    }
+
+    .wagon-visual {
+        font-size: 1.5rem;
+    }
+
+    .wagon-loaded-badge {
+        width: 17px;
+        height: 17px;
+        font-size: 0.8rem;
+        top: -3px;
+        right: -3px;
+    }
+
+    .wagon-label-slot {
+        font-size: 0.62rem;
+        max-width: 62px;
+    }
+
+    .wagon-wheels-bar {
+        width: 62px;
+        height: 15px;
+        margin-top: -4px;
+    }
+
+    .wagon-wheel {
+        width: 15px;
+        height: 15px;
+        border-width: 2px;
+    }
+
+    .wagon-wheel::after {
+        width: 4px;
+        height: 4px;
+    }
+
+    .wagon-coupling {
+        width: 7px;
+        height: 4px;
+        left: -7px;
+        bottom: 13px;
+    }
+}
+
+/* Telefon / Mobil Boyutu (500px ve altı: Tren ve 5 vagonun ekrana tam sığması) */
+@media (max-width: 500px) {
+    .train-sky-area {
+        margin-top: 5px;
+    }
+
+    .train-progress-badge {
+        font-size: 0.95rem;
+        padding: 4px 14px;
+        margin-bottom: 5px;
+    }
+
+    .target-balloon-body {
+        padding: 8px 16px;
+        min-width: 125px;
+    }
+
+    .balloon-word {
+        font-size: 1.5rem;
+    }
+
+    .balloon-word.arabic-text {
+        font-size: 1.8rem;
+    }
+
+    .balloon-phonetic {
+        font-size: 0.85rem;
+        margin-top: 1px;
+    }
+
+    .balloon-speaker-icon {
+        font-size: 0.95rem;
+    }
+
+    .target-balloon-rope {
+        height: 8px;
+    }
+
+    .target-balloon-basket {
+        font-size: 1.1rem;
+    }
+
+    .train-instruction-text {
+        font-size: 0.85rem;
+        padding: 2px 12px;
+        margin-top: 4px;
+    }
+
+    .train-track-container {
+        padding-bottom: 16px;
+    }
+
+    .train-convoy {
+        padding: 0 4px;
+    }
+
+    /* Lokomotif - Mobil */
+    .train-locomotive {
+        width: 50px;
+        height: 54px;
+        margin-right: 3px;
+    }
+
+    .locomotive-body {
+        width: 48px;
+        height: 36px;
+    }
+
+    .locomotive-cab {
+        width: 20px;
+        height: 35px;
+        border-radius: 5px 0 0 2px;
+        border-width: 1.5px;
+    }
+
+    .cab-window {
+        width: 11px;
+        height: 11px;
+        margin: 4px auto 0 auto;
+        border-width: 1.5px;
+        border-radius: 3px;
+    }
+
+    .locomotive-face {
+        width: 28px;
+        height: 27px;
+        margin-top: 8px;
+        border-radius: 0 14px 8px 0;
+        border-width: 1.5px;
+    }
+
+    .train-eye {
+        width: 5px;
+        height: 7px;
+        top: 4px;
+        border-width: 1px;
+    }
+
+    .train-eye.left-eye { left: 8px; }
+    .train-eye.right-eye { left: 17px; }
+
+    .train-eye .pupil {
+        width: 2.5px;
+        height: 2.5px;
+    }
+
+    .train-cheeks {
+        width: 4px;
+        height: 2.5px;
+        top: 13px;
+    }
+
+    .left-cheek { left: 5px; }
+    .right-cheek { left: 19px; }
+
+    .train-smile {
+        width: 10px;
+        height: 5px;
+        top: 13px;
+        left: 10px;
+        border-bottom-width: 2px;
+    }
+
+    .locomotive-wheels {
+        width: 48px;
+        height: 14px;
+        margin-top: -4px;
+    }
+
+    .big-wheel {
+        width: 14px;
+        height: 14px;
+        border-width: 1.5px;
+    }
+
+    .big-wheel::after {
+        width: 3px;
+        height: 3px;
+    }
+
+    .small-wheel {
+        width: 11px;
+        height: 11px;
+        border-width: 1.5px;
+    }
+
+    .small-wheel::after {
+        width: 2.5px;
+        height: 2.5px;
+    }
+
+    .locomotive-chimney {
+        width: 9px;
+        height: 13px;
+        top: 2px;
+        left: 16px;
+        border-top-width: 2px;
+    }
+
+    .locomotive-smoke-container {
+        top: -14px;
+        left: 14px;
+        gap: 3px;
+    }
+
+    .locomotive-smoke-container .puff {
+        font-size: 0.8rem;
+    }
+
+    /* Vagonlar - Mobil */
+    .train-wagon {
+        margin-left: 3px;
+    }
+
+    .wagon-box {
+        width: 46px;
+        height: 49px;
+        border-radius: 8px 8px 3px 3px;
+        border-width: 2px;
+        padding: 2px 1px 3px 1px;
+    }
+
+    .wagon-number-badge {
+        width: 12px;
+        height: 12px;
+        font-size: 0.52rem;
+        top: 2px;
+        left: 2px;
+    }
+
+    .wagon-cargo-slot {
+        width: 27px;
+        height: 27px;
+        margin-top: 1px;
+    }
+
+    .wagon-cargo-slot img {
+        width: 22px !important;
+        height: 22px !important;
+    }
+
+    .wagon-visual {
+        font-size: 1.2rem;
+    }
+
+    .wagon-loaded-badge {
+        width: 14px;
+        height: 14px;
+        font-size: 0.68rem;
+        top: -3px;
+        right: -3px;
+        border-width: 1.5px;
+    }
+
+    .wagon-label-slot {
+        font-size: 0.52rem;
+        max-width: 42px;
+    }
+
+    .wagon-wheels-bar {
+        width: 42px;
+        height: 11px;
+        margin-top: -3px;
+    }
+
+    .wagon-wheel {
+        width: 11px;
+        height: 11px;
+        border-width: 1.5px;
+    }
+
+    .wagon-wheel::after {
+        width: 2.5px;
+        height: 2.5px;
+    }
+
+    .wagon-coupling {
+        width: 5px;
+        height: 3px;
+        left: -5px;
+        bottom: 9px;
+    }
+
+    /* Raylar - Mobil */
+    .train-tracks {
+        height: 16px;
+        bottom: 1px;
+    }
+
+    .rail-bar {
+        height: 3px;
+    }
+
+    .rail-bottom {
+        top: 9px;
+    }
+
+    .sleepers-row {
+        height: 12px;
+    }
+}
+
+/* Çok Küçük Telefonlar (350px ve altı) */
+@media (max-width: 350px) {
+    .train-convoy {
+        padding: 0 1px;
+    }
+
+    .train-locomotive {
+        width: 42px;
+        height: 48px;
+        margin-right: 2px;
+    }
+
+    .locomotive-body {
+        width: 40px;
+        height: 32px;
+    }
+
+    .locomotive-cab {
+        width: 17px;
+        height: 31px;
+    }
+
+    .locomotive-face {
+        width: 23px;
+        height: 24px;
+    }
+
+    .locomotive-wheels {
+        width: 40px;
+        height: 12px;
+    }
+
+    .train-wagon {
+        margin-left: 2px;
+    }
+
+    .wagon-box {
+        width: 41px;
+        height: 45px;
+    }
+
+    .wagon-cargo-slot {
+        width: 24px;
+        height: 24px;
+    }
+
+    .wagon-cargo-slot img {
+        width: 19px !important;
+        height: 19px !important;
+    }
+
+    .wagon-label-slot {
+        font-size: 0.48rem;
+    }
+
+    .wagon-wheels-bar {
+        width: 38px;
+        height: 10px;
+    }
+
+    .wagon-wheel {
+        width: 9px;
+        height: 9px;
+    }
+
+    .wagon-coupling {
+        width: 4px;
+        left: -4px;
     }
 }
