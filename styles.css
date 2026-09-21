@@ -2342,23 +2342,41 @@ img.emoji {
 /* ==========================================================================
    TREN TÜM EKRAN ETRAFINDA ZAFER TURU (PERIMETER TOUR)
    ========================================================================== */
-.train-perimeter-lap #train-locomotive,
-.train-perimeter-lap .train-wagon {
+#train-tour-overlay {
     position: fixed !important;
-    z-index: 9999 !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    pointer-events: none !important;
+    z-index: 99999 !important;
+    overflow: hidden !important;
+}
+
+#train-tour-overlay .train-tour-car {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
     margin: 0 !important;
     pointer-events: none !important;
     transition: none !important;
-    will-change: transform, left, top;
+    will-change: transform;
+    transform-origin: center center !important;
+    filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.25));
 }
 
-.train-perimeter-lap .locomotive-smoke-container .puff {
-    animation-duration: 0.5s !important;
+#train-tour-overlay .locomotive-smoke-container .puff {
+    animation: puffSmoke 0.6s ease-out infinite !important;
+}
+
+#train-tour-overlay .wheel,
+#train-tour-overlay .wagon-wheel {
+    animation: spinWheel 0.22s linear infinite !important;
 }
 
 .train-perimeter-lap .wheel,
 .train-perimeter-lap .wagon-wheel {
-    animation: spinWheel 0.25s linear infinite !important;
+    animation: spinWheel 0.22s linear infinite !important;
 }
 
 @keyframes spinWheel {

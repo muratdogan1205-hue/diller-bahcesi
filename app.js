@@ -1176,13 +1176,14 @@ let trainLoadedCount = 0;
 let trainTotalWagons = 5;
 let isTrainProcessing = false;
 let isTrainDeparting = false;
+let trainLapRafId = null;
 
-// BuharlÄ± tren dÃ¼dÃ¼ÄŸÃ¼ sesi
+// Buharlı tren düdüğü sesi
 function playTrainWhistleSound() {
     try {
         const ctx = initAudioContext();
         const now = ctx.currentTime;
-        const freqs = [440, 554.37]; // A4 ve C#5 - Klasik neÅŸeli tren akoru
+        const freqs = [440, 554.37]; // A4 ve C#5 - Klasik neşeli tren akoru
 
         freqs.forEach(freq => {
             const osc = ctx.createOscillator();
@@ -1211,16 +1212,27 @@ function playTrainWhistleSound() {
             osc.stop(now + 0.65);
         });
     } catch (e) {
-        console.log('DÃ¼dÃ¼k sesi Ã§alÄ±namadÄ±');
+        console.log('Düdük sesi çalınamadı');
     }
 }
 
 function stopTrainGame() {
     isTrainProcessing = false;
     isTrainDeparting = false;
+    if (trainLapRafId) {
+        cancelAnimationFrame(trainLapRafId);
+        trainLapRafId = null;
+    }
+    const overlay = document.getElementById('train-tour-overlay');
+    if (overlay) {
+        overlay.remove();
+    }
+    document.body.classList.remove('train-perimeter-lap');
     const convoy = document.getElementById('train-convoy');
     if (convoy) {
         convoy.classList.remove('departing');
+        convoy.style.visibility = '';
+        convoy.style.display = '';
         convoy.style.transform = '';
     }
 }
@@ -1417,6 +1429,99 @@ function handleWagonClick(index, item, wagonEl) {
     }
 }
 
+// Ekran kenarları etrafında yuvarlatılmış dikdörtgen yörünge koordinat ve açı hesabı
+function getTrainPerimeterPoint(s, geom) {
+    const { xMin, xMax, yMin, yMax, R, W_straight, H_straight, arcLength, totalDist } = geom;
+
+    // Negatif veya periyodu aşan mesafeleri [0, totalDist) aralığına mod alarak eşle
+    s = ((s % totalDist) + totalDist) % totalDist;
+
+    // 1. Segment: Alt düzlük (Soldan Sağa, Açısı: 0°)
+    if (s <= W_straight) {
+        return {
+            x: xMin + R + s,
+            y: yMax,
+            angle: 0
+        };
+    }
+    s -= W_straight;
+
+    // 2. Segment: Sağ-Alt köşe yayı (Sağdan Yukarıya dönüş: 0° -> -90°)
+    if (s <= arcLength) {
+        const t = s / arcLength;
+        const theta = Math.PI / 2 - t * (Math.PI / 2);
+        return {
+            x: (xMax - R) + R * Math.cos(theta),
+            y: (yMax - R) + R * Math.sin(theta),
+            angle: -t * 90
+        };
+    }
+    s -= arcLength;
+
+    // 3. Segment: Sağ düzlük (Aşağıdan Yukarıya, Açısı: -90°)
+    if (s <= H_straight) {
+        return {
+            x: xMax,
+            y: (yMax - R) - s,
+            angle: -90
+        };
+    }
+    s -= H_straight;
+
+    // 4. Segment: Sağ-Üst köşe yayı (Yukarıdan Sola dönüş: -90° -> -180°)
+    if (s <= arcLength) {
+        const t = s / arcLength;
+        const theta = -t * (Math.PI / 2);
+        return {
+            x: (xMax - R) + R * Math.cos(theta),
+            y: (yMin + R) + R * Math.sin(theta),
+            angle: -90 - t * 90
+        };
+    }
+    s -= arcLength;
+
+    // 5. Segment: Üst düzlük (Sağdan Sola, Açısı: -180°)
+    if (s <= W_straight) {
+        return {
+            x: (xMax - R) - s,
+            y: yMin,
+            angle: -180
+        };
+    }
+    s -= W_straight;
+
+    // 6. Segment: Sol-Üst köşe yayı (Soldan Aşağıya dönüş: -180° -> -270°)
+    if (s <= arcLength) {
+        const t = s / arcLength;
+        const theta = -Math.PI / 2 - t * (Math.PI / 2);
+        return {
+            x: (xMin + R) + R * Math.cos(theta),
+            y: (yMin + R) + R * Math.sin(theta),
+            angle: -180 - t * 90
+        };
+    }
+    s -= arcLength;
+
+    // 7. Segment: Sol düzlük (Yukarıdan Aşağıya, Açısı: -270°)
+    if (s <= H_straight) {
+        return {
+            x: xMin,
+            y: (yMin + R) + s,
+            angle: -270
+        };
+    }
+    s -= H_straight;
+
+    // 8. Segment: Sol-Alt köşe yayı (Aşağıdan Sağa dönüş: -270° -> -360°)
+    const t = Math.min(s / arcLength, 1);
+    const theta = -Math.PI - t * (Math.PI / 2);
+    return {
+        x: (xMin + R) + R * Math.cos(theta),
+        y: (yMax - R) + R * Math.sin(theta),
+        angle: -270 - t * 90
+    };
+}
+
 function animateTrainDeparture() {
     isTrainDeparting = true;
     playCelebrationSound();
@@ -1425,79 +1530,134 @@ function animateTrainDeparture() {
     showFeedback("Bütün vagonlar doldu! Tren zafer turu atıyor! 🚂💨🎉");
 
     const convoy = document.getElementById('train-convoy');
-    if (!convoy) {
-        setTimeout(showGameComplete, 2200);
+    const locomotive = document.getElementById('train-locomotive');
+    const wagons = Array.from(document.querySelectorAll('.train-wagon'));
+
+    if (!convoy || !locomotive) {
+        setTimeout(showGameComplete, 1800);
         return;
     }
 
-    const locomotive = document.getElementById('train-locomotive');
-    const wagons = Array.from(document.querySelectorAll('.train-wagon'));
-    const trainElements = [locomotive, ...wagons];
+    // Varsa eski tur animasyonunu temizle
+    const oldOverlay = document.getElementById('train-tour-overlay');
+    if (oldOverlay) oldOverlay.remove();
+    if (trainLapRafId) {
+        cancelAnimationFrame(trainLapRafId);
+        trainLapRafId = null;
+    }
+
+    // Orijinal boyutları hesapla
+    const locoRect = locomotive.getBoundingClientRect();
+    const wagonRect = wagons[0] ? wagons[0].getBoundingClientRect() : locoRect;
+    const locoW = locoRect.width || 100;
+    const locoH = locoRect.height || 90;
+    const wagonW = wagonRect.width || 75;
+    const wagonH = wagonRect.height || 75;
 
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const padding = 20;
 
+    // Trenin köşelerde ekran dışına taşmaması için merkez güvenli alan sınırları
+    const maxDim = Math.max(locoW, locoH, wagonW, wagonH);
+    const maxR = maxDim / 2 + 12;
+    const xMin = maxR;
+    const xMax = vw - maxR;
+    const yMin = maxR + 8;
+    let yMax = (locoRect.top > 0 && locoRect.top < vh)
+        ? (locoRect.top + locoH / 2)
+        : (vh - maxR - 15);
+    yMax = Math.min(vh - maxR, Math.max(yMin + 80, yMax));
+
+    const R = Math.max(25, Math.min(65, (xMax - xMin) / 4, (yMax - yMin) / 4));
+    const W_straight = Math.max(10, (xMax - xMin) - 2 * R);
+    const H_straight = Math.max(10, (yMax - yMin) - 2 * R);
+    const arcLength = (Math.PI / 2) * R;
+    const totalDist = 2 * W_straight + 2 * H_straight + 4 * arcLength;
+
+    const geom = { xMin, xMax, yMin, yMax, R, W_straight, H_straight, arcLength, totalDist };
+
+    // Tam ekran tur katmanı oluştur
+    const overlay = document.createElement('div');
+    overlay.id = 'train-tour-overlay';
+    document.body.appendChild(overlay);
     document.body.classList.add('train-perimeter-lap');
-    convoy.style.display = 'none';
 
-    const waypoints = [
-        { x: padding, y: vh - 140, rot: 0 },
-        { x: vw - 160, y: vh - 140, rot: 0 },
-        { x: vw - 160, y: padding, rot: -90 },
-        { x: padding, y: padding, rot: -180 },
-        { x: padding, y: vh - 140, rot: -270 }
-    ];
+    // Lokomotif ve vagonların klonlarını yerleştir
+    const carElements = [];
+    const sourceElements = [locomotive, ...wagons];
 
-    let startTime = null;
-    const totalDuration = 4500;
-
-    function step(timestamp) {
-        if (!startTime) startTime = timestamp;
-        const progress = Math.min((timestamp - startTime) / totalDuration, 1);
-
-        trainElements.forEach((el, index) => {
-            if (!el) return;
-            const elementDelay = index * 0.04;
-            const elProgress = Math.max(0, Math.min(progress - elementDelay, 1));
-            
-            const segmentProgress = elProgress * 4;
-            const segIndex = Math.min(Math.floor(segmentProgress), 3);
-            const segT = segmentProgress - segIndex;
-
-            const p1 = waypoints[segIndex];
-            const p2 = waypoints[segIndex + 1];
-
-            const currentX = p1.x + (p2.x - p1.x) * segT;
-            const currentY = p1.y + (p2.y - p1.y) * segT;
-            const currentRot = p1.rot + (p2.rot - p1.rot) * segT;
-
-            el.style.position = 'fixed';
-            el.style.left = currentX + 'px';
-            el.style.top = currentY + 'px';
-            el.style.transform = `rotate(${currentRot}deg)`;
-            el.style.zIndex = '9999';
+    sourceElements.forEach((sourceEl, i) => {
+        const clone = sourceEl.cloneNode(true);
+        clone.id = `tour-car-${i}`;
+        clone.classList.add('train-tour-car');
+        if (i > 0) clone.classList.add('loaded');
+        overlay.appendChild(clone);
+        carElements.push({
+            el: clone,
+            w: i === 0 ? locoW : wagonW,
+            h: i === 0 ? locoH : wagonH
         });
+    });
 
-        if (progress < 1) {
-            requestAnimationFrame(step);
+    // Raydaki orijinal treni gizle
+    convoy.style.visibility = 'hidden';
+
+    // Lokomotifin arkasındaki vagon mesafelerini hesapla
+    const gap = Math.max(6, Math.min(14, wagonW * 0.12));
+    const offsets = [0];
+    for (let i = 1; i < carElements.length; i++) {
+        if (i === 1) {
+            offsets.push(locoW / 2 + gap + wagonW / 2);
         } else {
-            document.body.classList.remove('train-perimeter-lap');
-            trainElements.forEach(el => {
-                if (el) {
-                    el.style.position = '';
-                    el.style.left = '';
-                    el.style.top = '';
-                    el.style.transform = '';
-                    el.style.zIndex = '';
-                }
-            });
-            convoy.style.display = '';
-            showGameComplete();
+            offsets.push(offsets[i - 1] + wagonW + gap);
         }
     }
 
-    requestAnimationFrame(step);
+    // Başlangıç mesafesi: Tren alt ray boyunca öne doğru hareket edecek şekilde
+    const totalTrainLen = offsets[offsets.length - 1] || 200;
+    const s_start = totalTrainLen + 20;
+
+    // Tur süresi: Ekran çevresine orantılı (5.5sn - 7.5sn arası)
+    const duration = Math.max(5200, Math.min(7800, totalDist / 0.62));
+    let startTime = null;
+    let playedMidWhistle = false;
+
+    function renderTour(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Turun yaklaşık ortasında neşeli düdük çal
+        if (progress >= 0.45 && !playedMidWhistle) {
+            playedMidWhistle = true;
+            playTrainWhistleSound();
+        }
+
+        const currentLocoS = s_start + progress * totalDist;
+
+        carElements.forEach((car, i) => {
+            const carS = currentLocoS - offsets[i];
+            const pt = getTrainPerimeterPoint(carS, geom);
+            car.el.style.transform = `translate3d(${pt.x - car.w / 2}px, ${pt.y - car.h / 2}px, 0) rotate(${pt.angle}deg)`;
+        });
+
+        if (progress < 1) {
+            trainLapRafId = requestAnimationFrame(renderTour);
+        } else {
+            // Bir tam tur tamamlandı!
+            trainLapRafId = null;
+            playTrainWhistleSound();
+            playCelebrationSound();
+            showFeedback("Harika tur tamamlandı! 🏆✨");
+
+            setTimeout(() => {
+                stopTrainGame();
+                showGameComplete();
+            }, 600);
+        }
+    }
+
+    trainLapRafId = requestAnimationFrame(renderTour);
 }
 
 // --- BAÅLANGIÃ‡ OLAY DÄ°NLEYÄ°CÄ°LERÄ° (DOÄRUDAN TIKLAMA GARANTÄ°SÄ°) ---
